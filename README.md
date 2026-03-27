@@ -1,4 +1,4 @@
-# Code supplement to Early-childhood temperament deviations mark psychiatric risk into early adulthood
+# Early-childhood temperament deviations mark psychiatric risk into early adulthood
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
 [![DOI](https://img.shields.io/badge/DOI-10.1101%2F862615-informational
 )]([https://doi.org/10.1101/862615](https://doi.org/10.1101/2022.04.23.489093))
