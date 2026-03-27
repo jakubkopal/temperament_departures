@@ -12,7 +12,7 @@ Early-childhood temperament is associated with mental health outcomes decades la
 </div>
 
 
-<c>![Figure 1](https://github.com/jakubkopal/temperament_deviations/Figures/fig1.pdf)</c>
+<c>![Figure 1](https://github.com/jakubkopal/temperament_deviations/figures/fig1.png)</c>
 
 
 ## Resources and Scripts
