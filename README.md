@@ -3,7 +3,7 @@
 [![DOI](https://img.shields.io/badge/DOI-10.1101%2F862615-informational
 )]([https://doi.org/10.1101/862615](https://doi.org/10.1101/2022.04.23.489093))
 
-This repository contains the code used to process and analyse the data presented in the "Early-childhood temperament deviations mark psychiatric risk into early adulthood" paper. 
+This repository contains the code used to process and analyse the data presented in the "Departures from predicted temperament trajectories are associated with later psychiatric diagnoses" paper. 
 
 ## Abstract
 
@@ -12,7 +12,7 @@ Early-childhood temperament is associated with later mental health, yet it conti
 </div>
 
 
-<c>![Figure 1](https://github.com/jakubkopal/temperament_deviations/blob/main/figures/fig5.png)</c>
+<c>![Figure 1](https://github.com/jakubkopal/temperament_departures/blob/main/figures/fig5.png)</c>
 
 
 ## Resources and Scripts
