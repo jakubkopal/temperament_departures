@@ -9,8 +9,6 @@ This repository contains the code used to process and analyse the data presented
 
 <div style="margin-left: 40px;" align="justify">
 Early-childhood temperament is associated with later mental health, yet it continues to develop across the first years of life, so single measurements may miss information in its trajectory. Whether departures from typical developmental trajectories carry psychiatric risk beyond static trait levels remains unknown. Using data from more than 50,000 children in the Norwegian Mother, Father and Child Cohort Study, we modeled longitudinal temperament at 1.5, 3, and 5 years of age with the FEMA-Long mixed-effects framework. We then quantified child's departure from the predicted trajectories. Multivariate analysis revealed two transdiagnostic dimensions linking the departures to psychiatric diagnoses across childhood and adolescence. Higher scores on the first dimension were associated with increased hazard of subsequent ADHD diagnosis (hazard ratio = 1.54), and higher scores on the second with an increased hazard of Asperger syndrome (hazard ratio = 1.64). To examine the genetic basis of these associations, we performed longitudinal GWAS of temperament and conjunctional FDR analysis to detect loci shared with ADHD. Examining how each SNP's effect changed across early childhood, we found that some strengthened and others attenuated with age. These findings show that departures from predicted temperament trajectories capture transdiagnostic psychiatric risk with a shared genetic basis. Longitudinal, trajectory-based monitoring could help identify children at elevated psychiatric risk.
-<img width="468" height="280" alt="image" src="https://github.com/user-attachments/assets/8cfdd5a5-ae46-4ab5-b845-c3ba7911a474" />
-
 </div>
 
 
