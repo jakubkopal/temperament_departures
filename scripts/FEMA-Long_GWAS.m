@@ -33,17 +33,15 @@ T = readtable(strcat(path_main, '....csv'));
 %% Extract and preprocess demographic variables
 %  Age: continuous variable in months; z-score standardized for numerical stability
 age = T{:, "age"};  % Age in months
-age_ss = (age - mean(age))./std(age);  % Z-score standardized age
 
 %  Sex: binary indicator;
-sex = T{:, "sex"} - 1;  
+sex = T{:, "sex"};  
 
 %  Genetic PCs (Principal Components): 20 PCs from genetic data used to control for 
-%  population stratification and ancestry effects. Z-score standardized.
+%  population stratification and ancestry effects.
 genPCs = T{:, ["PC1", "PC2", "PC3", "PC4", "PC5", "PC6", "PC7", "PC8",...
     "PC9", "PC10", "PC11", "PC12", "PC13", "PC14", "PC15", "PC16",...
     "PC17", "PC18", "PC19", "PC20"]};  % 20 genetic principal components
-genPCs_ss = (genPCs - mean(genPCs))./std(genPCs);  % Z-score standardized genetic PCs
 
 %  Genotyping batch: categorical variable accounting for batch effects in genotyping process
 cols = contains(T.Properties.VariableNames, 'genotyping_batch');
@@ -62,24 +60,23 @@ eid = double(categorical(EID, {'18_months', '36_months', '60_months'}, 'Ordinal'
 numVisits   = length(unique(eid));  % Number of longitudinal time points
 intercept   = ones(height(eid), 1);  % Intercept term for regression model
 
-%% Extract and standardize outcome variables (CBCL Temperament scales)
-%  Four CBCL subscales measuring child behavior across two years:
+%% Extract and standardize outcome variables (EAS Temperament scales)
+%  Four EAS subscales measuring child behavior across three visits:
 %  - emot: Emotional reactivity
 %  - act:  Activity level
 %  - soc:  Sociability 
 %  - shy:  Shyness
 %  All outcomes z-score standardized for consistent scaling and ease of interpretation
-ymat = T{:, ["emot", "act", "soc", "shy"]};  % Raw CBCL outcome scores
-ymat_ss = (ymat - mean(ymat))./std(ymat);  % Z-score standardized outcomes
+ymat = T{:, ["emot", "act", "soc", "shy"]};  % EAS outcome scores
 
 %% Create smooth basis functions for age effect modeling
 %  Natural spline basis functions capture non-linear age-related developmental effects
-%  Knot placement: placed at median ages within each visit window for natural anchoring
+%  Knot placement: placed at median age for natural anchoring
 %  Two representations created:
 %  - raw_basisFunction: unprocessed basis for diagnostic purposes
 %  - basisFunction: SVD-processed basis for numerical stability in regression
 knots = zeros(1, 1);  % Initialize knot locations
-knots(1,1) = median(age(eid == 2));  % Place knot at median age of middle visit
+knots(1,1) = median(age);  % Place knot at median age
 
 %  Generate basis functions: 'nsk' = natural spline with k degrees of freedom
 %  Raw basis: unprocessed natural spline basis functions
@@ -95,7 +92,7 @@ basisFunction     = createBasisFunctions(age, knots, 'nsk', [], 'svd');
 %  - Sex: binary sex indicator
 %  - Genetic PCs: ancestry correction (20 PCs)
 %  - Genotyping batch: technical covariate controlling for batch variation
-X = [intercept, basisFunction, sex, genPCs_ss, genBatch];
+X = [intercept, basisFunction, sex, genPCs, genBatch];
 
 %  Ensure design matrix is full rank (required for statistical inference)
 %  Non-full rank indicates redundant or collinear covariates
@@ -197,11 +194,11 @@ CovType         = 'unstructured';
 %  GWAS-specific settings for SNP analysis
 chunkSize       = 5000;  % Process 5000 SNPs per computational chunk
 splitBy         = 'snp';  % Divide computational work by SNPs (vs. by family, etc.)
-SingleOrDouble  = 'double';  % Numerical precision for computation
+precision  = 'double';  % Numerical precision for computation
 
 %  Parallel computing configuration
-numWorkers      = 10;  % Number of parallel workers (CPUs) to utilize
-numThreads      = 12;  % Threads per worker
+numWorkers      = ;  % Number of parallel workers (CPUs) to utilize
+numThreads      = ;  % Threads per worker
 GWAS_outPrefix  = 'FEMA_GWAS_Aggregate';  % Prefix for output files from GWAS
 
 %% ========================================================================
@@ -222,15 +219,15 @@ GWAS_outPrefix  = 'FEMA_GWAS_Aggregate';  % Prefix for output files from GWAS
  beta_hat_perm, beta_se_perm,   zmat_perm,   sig2tvec_perm,        ...
  sig2mat_perm,  logLikvec_perm, binvec_save, nvec_bins,            ...
  tvec_bins,     FamilyStruct,   coeffCovar,  reusableVars] =       ...
- FEMA_fit(X, IID, eid, FID, age, phenotype, niter, contrasts, nbins, ...
+ FEMA_fit(X, IID, eid, FID, age, ymat, niter, contrasts, nbins, ...
           pihatmat, 'RandomEffects', RandomEffects, ...
-          'CovType', 'unstructured', 'returnReusable', returnReusable, 'SingleOrDouble', SingleOrDouble);
+          'CovType', CovType, 'returnReusable', returnReusable, 'precision', precision);
 %  
 %  Input parameters:
 %  - X: covariate matrix (fixed effects)
 %  - IID, EID, FID: individual, event, family identifiers
 %  - age: continuous age variable
-%  - phenotype: outcome variable (CBCL scale)
+%  - ymat: outcome variable
 %  - pihatmat: genetic relatedness matrix from GRM
 %  - RandomEffects: variance components to estimate (Familial, Additive genetic, Shared environment, Error)
 
@@ -265,7 +262,7 @@ end
 
 [allWsTerms, tCompile] = FEMA_compileTerms(FamilyStruct.clusterinfo, binvec_save,            ...
                                            sig2mat, RandomEffects, FamilyStruct.famtypevec,  ...
-                                           reusableVars.GroupByFamType, CovType, SingleOrDouble, reusableVars.visitnum);
+                                           GroupByFamType, CovType, precision, unstructParams.visitnum);
 
 %% ========================================================================
 %  DIVIDE SNPS INTO COMPUTATIONAL CHUNKS
@@ -284,11 +281,11 @@ end
 
 %  Create local cluster object with specified threading configuration
 local            = parcluster('local');  % Use local machine resources
-local.NumThreads = 6;  % Threads per MATLAB worker
+local.NumThreads = ;  % Threads per MATLAB worker
 
-%  Start parallel pool: 20 workers with 4 min idle timeout before auto-shutdown
+%  Start parallel pool: ... workers with ... idle timeout before auto-shutdown
 %  This pool will be used for parfor loop below to parallelize SNP testing
-pool             = local.parpool(20, 'IdleTimeout', 240);
+pool             = local.parpool(, 'IdleTimeout', );
 
 %% ========================================================================
 %  MAIN GWAS: TEST EACH SNP FOR ASSOCIATION WITH OUTCOMES
@@ -299,7 +296,7 @@ pool             = local.parpool(20, 'IdleTimeout', 240);
 
 %  Prepare residual phenotypes from baseline FEMA fit
 %  (phenotype adjusted for covariates but not SNP effects)
-ymat_res_gls = reusableVars.ymat_res_gls;
+ymat_res_gls = residuals_GLS;
 
 %  Basis functions for SNP analysis: intercept + age smooth trend
 %  (lower-dimensional basis for computational efficiency in GWAS)
@@ -316,7 +313,7 @@ parfor parts = 1:length(splitInfo)
     %    - X: covariate matrix
     %    - allWsTerms: pre-compiled variance components (from variance component model)
     %  Outputs: Beta estimates and standard errors written to files
-    FEMA_fit_GWAS(splitInfo{parts}, ymat_res_gls, binvec_save, X, allWsTerms, 'outDir', dirOutput, 'outName', splitInfo{parts}.outName, 'bfSNP', bfSNP, 'doCoeffCovar', true, 'SingleOrDouble', SingleOrDouble);
+    FEMA_fit_GWAS(splitInfo{parts}, ymat_res_gls, binvec_save, X, allWsTerms, 'outDir', dirOutput, 'outName', splitInfo{parts}.outName, 'bfSNP', bfSNP, 'doCoeffCovar', true, 'precision', precision);
 end
 
 %% ========================================================================
